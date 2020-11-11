@@ -1,0 +1,20 @@
+FROM alpine as compiler
+
+ENV BUILD_ARG="-z execstack -fno-stack-protector -no-pie -z norelro"
+
+COPY ./pwn/ /pwn/
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
+    && apk add gcc libc-dev \
+    && gcc $BUILD_ARG /pwn/pwn.c -o /pwn/pwn \
+    && strip /pwn/pwn
+
+FROM alpine
+
+COPY --from=compiler /pwn/pwn /pwn
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
+    && apk add socat \
+    && rm -rf /var/cache/apk/*
+
+CMD ["socat","tcp-listen:10000,fork","exec:/pwn,reuseaddr"]
