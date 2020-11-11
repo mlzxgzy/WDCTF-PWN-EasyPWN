@@ -15,6 +15,9 @@ COPY --from=compiler /pwn/pwn /pwn
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
     && apk add socat \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* \
+    && echo 'if [ ! $FLAG ]; then export FLAG="flag{Flag_System_Was_Broken_Please_Contect_To_Administrator}"; fi' >> /n2r.sh \
+    && echo 'sed -i "s/{put_flag_here}/$FLAG/g" /srv/*' >> /n2r.sh \
+    && echo 'socat tcp-listen:10000,fork exec:/pwn,reuseaddr' >> /n2r.sh
 
-CMD ["socat","tcp-listen:10000,fork","exec:/pwn,reuseaddr"]
+CMD "/n2r.sh"
